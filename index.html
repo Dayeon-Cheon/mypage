@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>내일배움캠프를 시작하며</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="css/style.css" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+      crossorigin="anonymous"
+    />
+    <script type="module">
+      // Firebase SDK 라이브러리 가져오기
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+      import { getFirestore } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+      import {
+        collection,
+        addDoc,
+      } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+      import { getDocs } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+      // Firebase 구성 정보 설정
+      const firebaseConfig = {
+        apiKey: "AIzaSyAR36yFasmU_m6vNAT0n8bg-GwEsZKUE0o",
+        authDomain: "sparta-10a3a.firebaseapp.com",
+        projectId: "sparta-10a3a",
+        storageBucket: "sparta-10a3a.appspot.com",
+        messagingSenderId: "751870807401",
+        appId: "1:751870807401:web:e15a61affb9698566a41f8",
+        measurementId: "G-XWRJREERWJ",
+      };
+
+      // Firebase 인스턴스 초기화
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+
+      $("#postingbtn").click(async function () {
+        let image = $("#image").val();
+        let comment = $("#comment").val();
+
+        if (image.length === 0 || comment.length === 0) {
+          alert("모든 항목을 입력해 주세요.");
+          window.location.reload();
+        }
+
+        const d = new Date();
+        let year = d.getFullYear();
+        let month = d.getMonth() + 1;
+        let day = d.getDate();
+        let date = `${year}/${month}/${day}`;
+
+        let doc = {
+          image: image,
+          comment: comment,
+          date: date,
+        };
+
+        await addDoc(collection(db, "today"), doc);
+
+        window.location.reload();
+      });
+
+      // 오늘의 다짐 등록하기 토글
+      $("#savebtn").click(async function () {
+        $("#postingbox").toggle();
+      });
+
+      // 카드 가져오기
+      let docs = await getDocs(collection(db, "today"));
+
+      docs.forEach((doc) => {
+        let row = doc.data();
+
+        let image = row["image"];
+        let comment = row["comment"];
+        let date = row["date"];
+
+        let tempHtml = `
+              <div class="col">
+                <div class="card h-100">
+                  <div class="card-header">
+                    <small class="text-body-secondary">${date}</small>
+                  </div>
+                  <img
+                    src="${image}"
+                    class="card-img-top"
+                    alt="..."
+                  />
+                  <div class="card-body">
+                    <p class="card-text">${comment}</p>
+                  </div>
+                </div>
+              </div>`;
+        $("#card").append(tempHtml);
+      });
+
+      // 현재 위치 기반 기온 가져오기
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function (position) {
+          let latitude = position.coords.latitude;
+          let longitude = position.coords.longitude;
+
+          let apiKey = "d6ab5970bcda922ee997dced7f1bc072";
+          let apiUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&units=metric&appid=${apiKey}`;
+
+          fetch(apiUrl)
+            .then((response) => response.json())
+            .then((data) => {
+              let temp = data.main.temp;
+              $("#temp").text(`🌡 현재 위치 기온 : ${temp}°C`);
+            });
+        });
+      }
+
+      // 서울의 현재 미세먼지 정보 가져오기
+      // let url = "http://spartacodingclub.shop/sparta_api/seoulair";
+      // fetch(url)
+      //   .then((res) => res.json())
+      //   .then((data) => {
+      //     // console.log(data);
+      //     let airQualityIndex = data["RealtimeCityAir"]["row"][0]["IDEX_MVL"];
+      //     let airQuality = data["RealtimeCityAir"]["row"][0]["IDEX_NM"];
+
+      //     let $msg = "";
+
+      //     if (airQualityIndex === -99) {
+      //       $msg = `점검중 입니다.`;
+      //     } else {
+      //       $msg = `${airQualityIndex} (${airQuality})`;
+      //     }
+
+      //     alert("서울의 현재 미세먼지 농도: " + $msg);
+      //   });
+    </script>
+  </head>
+  <body>
+    <div class="mytitle">
+      <h1>☀️ 내일배움캠프를 시작하며 ☀️</h1>
+      <button id="savebtn">오늘의 다짐 등록하기</button>
+      <span id="temp"></span>
+    </div>
+    <div class="mypostingbox" id="postingbox">
+      <div class="form-floating mb-3">
+        <input
+          type="text"
+          class="form-control"
+          id="image"
+          placeholder="오늘 내 기분을 표현하는 이미지"
+        />
+        <label for="image">오늘 내 기분을 표현하는 이미지</label>
+      </div>
+      <div class="form-floating mb-3">
+        <input
+          type="text"
+          class="form-control"
+          id="comment"
+          placeholder="오늘의 다짐 한 마디"
+        />
+        <label for="comment">오늘의 다짐 한 마디</label>
+      </div>
+      <div class="mybtn">
+        <button id="postingbtn" type="button" class="btn btn-secondary">
+          등록하기
+        </button>
+      </div>
+    </div>
+    <div class="mycards">
+      <div id="card" class="row row-cols-1 row-cols-md-4 g-4"></div>
+    </div>
+  </body>
+</html>
