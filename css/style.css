@@ -60,6 +60,10 @@
   text-align: center;
 }
 
+.mycards {
+  margin: auto auto 50px auto;
+}
+
 #savebtn {
   font-size: 18px;
 }
